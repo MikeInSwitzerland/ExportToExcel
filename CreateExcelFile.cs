@@ -16,7 +16,7 @@ using System.Text.RegularExpressions;
 namespace ExportToExcel
 {
     //
-    //  December 2021
+    //  January 2022
     //  http://www.mikesknowledgebase.com
     //
     //  Note: if you plan to use this in an ASP.Net web application, remember to add a reference to "System.Web", and to uncomment
@@ -46,7 +46,7 @@ namespace ExportToExcel
     //   - Mar 2012: Fixed issue, where Microsoft.ACE.OLEDB.12.0 wasn't able to connect to the Excel files created using this class.
     //
     //
-    //   (c) www.mikesknowledgebase.com 2016 
+    //   (c) www.mikesknowledgebase.com 2022 
     //   
     //   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files 
     //   (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, 
@@ -75,15 +75,15 @@ namespace ExportToExcel
         public static DataTable ListToDataTable<T>(List<T> list)
         {
             DataTable dt = new DataTable();
-
-            foreach (PropertyInfo info in typeof(T).GetProperties())
+            var props = typeof(T).GetProperties().Where(p => p.GetIndexParameters().Length == 0).ToList();
+            foreach (PropertyInfo info in props)
             {
                 dt.Columns.Add(new DataColumn(info.Name, GetNullableType(info.PropertyType)));
             }
             foreach (T t in list)
             {
                 DataRow row = dt.NewRow();
-                foreach (PropertyInfo info in typeof(T).GetProperties())
+                foreach (PropertyInfo info in props)
                 {
                     if (!IsNullableType(info.PropertyType))
                         row[info.Name] = info.GetValue(t, null);
@@ -335,7 +335,7 @@ namespace ExportToExcel
                 IsIntegerColumn[colInx] = (col.DataType.FullName.StartsWith("System.Int"));
                 IsFloatColumn[colInx] = (col.DataType.FullName == "System.Decimal") || (col.DataType.FullName == "System.Double") || (col.DataType.FullName == "System.Single");
                 IsDateColumn[colInx] = (col.DataType.FullName == "System.DateTime");
-            
+
             }
             writer.WriteEndElement();   //  End of header "Row"
 
@@ -343,9 +343,9 @@ namespace ExportToExcel
             //  Now, step through each row of data in our DataTable...
             //
             double cellFloatValue = 0;
-        CultureInfo ci = new CultureInfo("en-US");
-        foreach (DataRow dr in dt.Rows)
-        {
+            CultureInfo ci = new CultureInfo("en-US");
+            foreach (DataRow dr in dt.Rows)
+            {
                 // ...create a new row, and append a set of this row's data to it.
                 ++rowIndex;
 
